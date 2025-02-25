@@ -20,6 +20,33 @@
         claude-desktop = final.callPackage ./pkgs/claude-desktop.nix {
           patchy-cnb = final.patchy-cnb;
         };
+        claude-desktop-fhs =
+          let
+            name = "claude-desktop";
+          in
+          final.buildFHSEnv {
+            inherit name;
+            pname = name;
+            version = final.claude-desktop.version;
+            targetPkgs =
+              pkgs:
+              builtins.attrValues {
+                inherit (pkgs)
+                  docker
+                  glibc
+                  openssl
+                  nodejs
+                  uv
+                  ;
+              };
+            runScript = final.lib.getExe final.claude-desktop;
+            meta = final.claude-desktop.meta // {
+              description = ''
+                Wrapped version of ${name} which launches in an FHS compatible environment.
+                Should allow for Model Context Protocol servers to run.
+              '';
+            };
+          };
       };
     in
     {
@@ -32,9 +59,14 @@
           };
         in
         {
-          inherit (pkgs) patchy-cnb claude-desktop;
+          inherit (pkgs) patchy-cnb claude-desktop claude-desktop-fhs;
           default = pkgs.claude-desktop;
           unlicensed = pkgs.claude-desktop.overrideAttrs (
+            final: prev: {
+              meta = removeAttrs prev.meta [ "license" ];
+            }
+          );
+          unlicensed-fhs = pkgs.claude-desktop-fhs.overrideAttrs (
             final: prev: {
               meta = removeAttrs prev.meta [ "license" ];
             }
