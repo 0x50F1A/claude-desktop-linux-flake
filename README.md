@@ -1,4 +1,4 @@
-***THIS IS AN UNOFFICIAL BUILD SCRIPT!***
+**_THIS IS AN UNOFFICIAL BUILD SCRIPT!_**
 
 If you run into an issue with this build script, make an issue here. Don't bug Anthropic about it - they already have enough on their plates.
 
@@ -30,6 +30,7 @@ are dictated by the application itself, not the build script used to build the a
 ## Installation on NixOS with Flakes
 
 Add the following to your `flake.nix`:
+
 ```nix
 inputs.claude-desktop.url = "github:k3d3/claude-desktop-linux-flake";
 inputs.claude-desktop.inputs.nixpkgs.follows = "nixpkgs";
@@ -37,8 +38,29 @@ inputs.claude-desktop.inputs.flake-utils.follows = "flake-utils";
 ```
 
 And then the following package to your `environment.systemPackages` or `home.packages`:
+
 ```nix
-inputs.claude-desktop.packages.${system}.claude-desktop
+inputs.claude-desktop.packages.${system}.claude-desktop # or claude-desktop-fhs
+```
+
+## Overlay installation on NixOS with Flakes
+
+To use the same `pkgs` as the rest of the configuration (for example, to allow this package to be installed without impurity), add as an overlay:
+
+```nix
+import inputs.nixpkgs {
+  inherit system;
+  config.allowUnfree = true;
+  overlays = [
+    inputs.claude-desktop.overlays.default
+  ];
+}
+```
+
+Then install normally:
+
+```nix
+pkgs.claude-desktop # (or claude-desktop-fhs)
 ```
 
 ## Other distributions
@@ -46,6 +68,7 @@ inputs.claude-desktop.packages.${system}.claude-desktop
 This repository only provides a Nix flake, and does not provide a package for e.g. Ubuntu, Fedora, or Arch Linux.
 
 Other known variants:
+
 - https://github.com/wankdanker/claude-desktop-linux-bash - A bash-based Claude Desktop builder that works on Ubuntu and possibly other Debian derivatives
 
 If anyone else packages Claude Desktop for other distributions, make an issue or PR and I'll link it here.
@@ -63,8 +86,8 @@ With the exception of one library.
 ![image](https://github.com/user-attachments/assets/9b386f42-2565-441a-a351-9c09347f9f5f)
 
 Node, and by extension Electron, allow you to import natively-compiled objects into the Node runtime as if they were regular modules.
-These are typically used to extend the functionality in ways Node itself can't do. Only problem, as shown above, is that these objects 
-are only compiled for one OS. 
+These are typically used to extend the functionality in ways Node itself can't do. Only problem, as shown above, is that these objects
+are only compiled for one OS.
 
 Luckily enough, because it's a loadable Node module, that means you can open it up yourself in node and inspect it - no decompilation or disassembly needed:
 
@@ -84,6 +107,12 @@ Turns out, the original module also used NAPI-RS. Neat!
 
 From there, it's just a matter of compiling `patchy-cnb`, repackaging the app.asar to include the newly built Linux module, and
 making a new Electron build with these files.
+
+## `unlicensed`
+
+To ease installation in some cases, there are two unlicensed packages:
+
+`unlicensed` and `unlicensed-fhs`
 
 # License
 
